@@ -1,5 +1,7 @@
 import React from 'react';
-const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='; // A
+import axios from 'axios';
+
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
   const initialStories = [
   {
     title: 'React',
@@ -19,11 +21,6 @@ const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='; // A
   },
 ];
 
-// const getAsyncStories = () =>  {
-//   return new Promise(resolve => setTimeout(() => resolve({data: {stories: initialStories}}), 2000))
-//     // return new Promise((resolve, reject) => setTimeout(reject, 2000))
-
-// };
 
 // const stories2 = [
 //   {
@@ -70,40 +67,57 @@ function storiesReducer(state, action) {
 const App = () => {
   console.log(`app component rendering`)
 
-const [searchTerm, setSearchTerm] = useSemiPeristentState('value', 'React');
- const [stories, dispatchStories ]= React.useReducer(storiesReducer, {data:[], isLoading: false, isError: false})
-React.useEffect(() => {
-  console.log('running use effect to setStories')
+  const [searchTerm, setSearchTerm] = useSemiPeristentState('value', 'React');
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
+  const [stories, dispatchStories ]= React.useReducer(storiesReducer, {data:[], isLoading: false, isError: false})
+ 
 
-  if (!searchTerm) return;
-  dispatchStories({type: 'STORIES_FETCH_INIT'});
-  fetch(`${API_ENDPOINT}${searchTerm}`).then(result => result.json()).then(result => {
-    dispatchStories({
-      type: 'STORIES_FETCH_SUCCESS',
-      payload: result.hits
-    })
+ const handleFetchStories = React.useCallback(async () => {
 
-  }).catch(() => dispatchStories({type: 'STORIES_FETCH_FAILURE'}));
+    dispatchStories({ type: 'STORIES_FETCH_INIT' });
+
+    try {
+       const response = await axios.get(url);
+        dispatchStories({
+          type: 'STORIES_FETCH_SUCCESS',
+          payload: response.data.hits,
+        });
+    } catch(e) {
+      dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
+    }
   
-}, [searchTerm])
 
-const handleRemoveStory = item => {  
-  dispatchStories({type: 'REMOVE_STORY', payload: item})
-}
+  }, [url]); // E
 
-const handleSearch = event => {
-  // we have access to the Search components local react event
-  setSearchTerm(event.target.value)
-}
+React.useEffect(() => {
+    console.log('running use effect to setStories')
+  handleFetchStories();
+
+}, [handleFetchStories])
+   
+ 
+
+  const handleRemoveStory = item => {  
+    dispatchStories({type: 'REMOVE_STORY', payload: item})
+  }
+
+  const handleSearchInput = event => {
+    // we have access to the Search components local react event
+    setSearchTerm(event.target.value)
+  }
+
+  function handleSearchSubmit(event) {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    event.preventDefault();
+  }
   
     return (<div>
       <h1>My Hacker Stories</h1>
 
-      <InputWithLabel id="search"onInputChange={handleSearch} value={searchTerm}>
-        <strong>Search:</strong>
-        <Text />
-      </InputWithLabel>
-
+     <SearchForm   
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}/>
       <hr />
       
       {stories.isError && <p>Something went wrong ...</p>}
@@ -115,8 +129,28 @@ const handleSearch = event => {
       {/* <List list={stories2}/> */}
     </div>
   );
-  };
+};
 
+const SearchForm = ({
+  searchTerm,
+  onSearchInput,
+  onSearchSubmit,
+}) => (
+  <form onSubmit={onSearchSubmit}>
+    <InputWithLabel
+      id="search"
+      value={searchTerm}
+      isFocused
+      onInputChange={onSearchInput}
+    >
+      <strong>Search:</strong>
+    </InputWithLabel>
+
+    <button type="submit" disabled={!searchTerm}>
+      Submit
+    </button>
+  </form>
+);
 function List(props) {
   console.log('list component rendering')
   const {list, onRemoveItem} = props;
