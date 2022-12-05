@@ -64,73 +64,103 @@ function storiesReducer(state, action) {
       throw new Error();
   }
 }
-const App = () => {
-  console.log(`app component rendering`)
+// const App = () => {
+//   console.log(`app component rendering`)
 
-  const [searchTerm, setSearchTerm] = useSemiPeristentState('value', 'React');
-  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
-  const [stories, dispatchStories ]= React.useReducer(storiesReducer, {data:[], isLoading: false, isError: false})
+//   const [searchTerm, setSearchTerm] = useSemiPeristentState('value', 'React');
+//   const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
+//   const [stories, dispatchStories ]= React.useReducer(storiesReducer, {data:[], isLoading: false, isError: false})
  
 
- const handleFetchStories = React.useCallback(async () => {
+//  const handleFetchStories = React.useCallback(async () => {
 
-    dispatchStories({ type: 'STORIES_FETCH_INIT' });
+//     dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-    try {
-       const response = await axios.get(url);
-        dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
-          payload: response.data.hits,
-        });
-    } catch(e) {
-      dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
-    }
+//     try {
+//        const response = await axios.get(url);
+//         dispatchStories({
+//           type: 'STORIES_FETCH_SUCCESS',
+//           payload: response.data.hits,
+//         });
+//     } catch(e) {
+//       dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
+//     }
   
 
-  }, [url]); // E
+//   }, [url]); // E
 
-React.useEffect(() => {
-    console.log('running use effect to setStories')
-  handleFetchStories();
+// React.useEffect(() => {
+//     console.log('running use effect to setStories')
+//   handleFetchStories();
 
-}, [handleFetchStories])
+// }, [handleFetchStories])
    
  
 
-  const handleRemoveStory = item => {  
-    dispatchStories({type: 'REMOVE_STORY', payload: item})
-  }
+//   const handleRemoveStory = item => {  
+//     dispatchStories({type: 'REMOVE_STORY', payload: item})
+//   }
 
-  const handleSearchInput = event => {
-    // we have access to the Search components local react event
-    setSearchTerm(event.target.value)
-  }
+//   const handleSearchInput = event => {
+//     // we have access to the Search components local react event
+//     setSearchTerm(event.target.value)
+//   }
 
-  function handleSearchSubmit(event) {
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
-    event.preventDefault();
-  }
+//   function handleSearchSubmit(event) {
+//     setUrl(`${API_ENDPOINT}${searchTerm}`);
+//     event.preventDefault();
+//   }
   
-    return (<div>
-      <h1>My Hacker Stories</h1>
+//     return (<div>
+//       <h1>My Hacker Stories</h1>
 
-     <SearchForm   
-        searchTerm={searchTerm}
-        onSearchInput={handleSearchInput}
-        onSearchSubmit={handleSearchSubmit}/>
-      <hr />
+//      <SearchForm   
+//         searchTerm={searchTerm}
+//         onSearchInput={handleSearchInput}
+//         onSearchSubmit={handleSearchSubmit}/>
+//       <hr />
       
-      {stories.isError && <p>Something went wrong ...</p>}
-      {stories.isLoading ? (<p>Loading ...</p>) : (
-        <List list={stories.data} onRemoveItem={handleRemoveStory}
-        />
-      )}
+//       {stories.isError && <p>Something went wrong ...</p>}
+//       {stories.isLoading ? (<p>Loading ...</p>) : (
+//         <List list={stories.data} onRemoveItem={handleRemoveStory}
+//         />
+//       )}
 
-      {/* <List list={stories2}/> */}
-    </div>
-  );
-};
+//       {/* <List list={stories2}/> */}
+//     </div>
+//   );
+// };
 
+class ClassInput extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+        searchTerm: 'React',
+    }
+  }
+
+  onInputChange(event) {
+    console.log('updating searchTerm state')
+    this.setState({searchTerm: event.target.value})
+  }
+
+
+  // componentDidUpdate(prevProps) {
+  //   console.log(`search term was: ${prevProps.searchTerm} vs new search term: ${this.state.searchTerm}`)
+  // }
+  render() {
+    return (
+      <div>
+        <input value={this.searchTerm} onChange={(event) => this.onInputChange(event) }></input>
+      </div>
+    )
+  }
+}
+function App() {
+  return (
+    <ClassInput />
+  )
+}
 const SearchForm = ({
   searchTerm,
   onSearchInput,
@@ -190,10 +220,5 @@ const InputWithLabel = ({id, children, value, onInputChange, type = "text"}) => 
     <p>Search Term: <strong>{value}</strong> </p>
   </>)}
 
-const Text = () => {
-  return (
-    'textString'
-  )
-}
-
 export default App;
+
